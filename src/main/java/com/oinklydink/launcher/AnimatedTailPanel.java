@@ -6,10 +6,16 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
 /**
- * Animated icon panel that displays the pig's tail with a 44-frame wiggle animation.
- * On double-click, shows a brilliant red key in the upper-right corner.
+ * The 3D pig's tail desktop widget.
  *
- * The animation runs at ~24fps for smooth wiggling.
+ * Behavior:
+ *  - Sits still and comfortable by default (frame 0, no animation)
+ *  - On single-click: shakes and wiggles for ~1.5 seconds, then launches
+ *    the configured Java program
+ *  - On double-click: shows the brilliant red key + wiggles
+ *
+ * The wiggle is a quick, playful burst — not continuous.
+ * Careful and comfortable when at rest.
  */
 public class AnimatedTailPanel extends JPanel {
 
@@ -17,90 +23,120 @@ public class AnimatedTailPanel extends JPanel {
     private static final int FPS = 24;
     private static final int FRAME_DELAY_MS = 1000 / FPS;
 
+    /** Duration of the wiggle burst on click (milliseconds). */
+    private static final int WIGGLE_DURATION_MS = 1500;
+
+    /** Duration of the red key display (milliseconds). */
+    private static final int KEY_DURATION_MS = 3000;
+
     private BufferedImage[] frames;
     private BufferedImage[] framesWithKey;
+    private BufferedImage stillFrame;
     private int currentFrame = 0;
     private boolean showKey = false;
-    private boolean animating = false;
-    private Timer animationTimer;
+    private boolean wiggling = false;
 
-    // Key visibility timer (shows for 3 seconds after double-click)
+    private Timer animationTimer;
+    private Timer wiggleStopTimer;
     private Timer keyTimer;
 
+    /** Callback invoked after the wiggle animation completes (launches the program). */
+    private Runnable onLaunchAction;
+
     public AnimatedTailPanel() {
-        setPreferredSize(new Dimension(ICON_SIZE + 8, ICON_SIZE + 8));
+        setPreferredSize(new Dimension(ICON_SIZE + 12, ICON_SIZE + 12));
         setOpaque(false);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        setToolTipText("Double-click to activate the key!");
+        setToolTipText("Click to launch! Double-click for the key.");
 
-        // Pre-render all 44 frames (with and without key)
+        // Pre-render all 44 frames
         frames = PigTailIcon.generateAllFrames(ICON_SIZE, false);
         framesWithKey = PigTailIcon.generateAllFrames(ICON_SIZE, true);
+        stillFrame = frames[0]; // Resting position
 
-        // Animation timer
+        // Animation timer (only runs during wiggle)
         animationTimer = new Timer(FRAME_DELAY_MS, e -> {
             currentFrame = (currentFrame + 1) % PigTailIcon.TOTAL_FRAMES;
             repaint();
         });
 
-        // Key display timer - hides key after 3 seconds
-        keyTimer = new Timer(3000, e -> {
+        // Wiggle stop timer — stops animation after burst, then fires launch
+        wiggleStopTimer = new Timer(WIGGLE_DURATION_MS, e -> {
+            stopWiggle();
+            // Fire the launch action after the wiggle completes
+            if (onLaunchAction != null && !showKey) {
+                onLaunchAction.run();
+            }
+        });
+        wiggleStopTimer.setRepeats(false);
+
+        // Key display timer
+        keyTimer = new Timer(KEY_DURATION_MS, e -> {
             showKey = false;
             keyTimer.stop();
             repaint();
         });
         keyTimer.setRepeats(false);
 
-        // Double-click handler - shows the red key and triggers wiggle
+        // Mouse interaction
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
+                    // Double-click: show red key + wiggle (no launch)
                     activateKey();
+                } else if (e.getClickCount() == 1) {
+                    // Single-click: wiggle then launch
+                    if (!wiggling) {
+                        startWiggleAndLaunch();
+                    }
                 }
             }
         });
-
-        // Start animating
-        startAnimation();
     }
 
     /**
-     * Activates the red key display and triggers an animation burst.
+     * Sets the action to run when the tail is clicked (after wiggle completes).
+     */
+    public void setOnLaunchAction(Runnable action) {
+        this.onLaunchAction = action;
+    }
+
+    /**
+     * Single-click: start a wiggle burst, then launch.
+     */
+    private void startWiggleAndLaunch() {
+        wiggling = true;
+        currentFrame = 0;
+        animationTimer.start();
+        wiggleStopTimer.restart();
+    }
+
+    /**
+     * Double-click: show the red key and wiggle (cosmetic only).
      */
     public void activateKey() {
         showKey = true;
+        wiggling = true;
+        currentFrame = 0;
+        animationTimer.start();
         keyTimer.restart();
 
-        // Ensure animation is running during key display
-        if (!animating) {
-            startAnimation();
-        }
-
-        repaint();
+        // Stop the wiggle after key display ends
+        Timer keyWiggleStop = new Timer(KEY_DURATION_MS, e -> stopWiggle());
+        keyWiggleStop.setRepeats(false);
+        keyWiggleStop.start();
     }
 
     /**
-     * Starts the wiggle animation.
+     * Stops the wiggle, returns to comfortable rest.
      */
-    public void startAnimation() {
-        animating = true;
-        animationTimer.start();
-    }
-
-    /**
-     * Stops the wiggle animation, leaving it at the current frame.
-     */
-    public void stopAnimation() {
-        animating = false;
+    private void stopWiggle() {
+        wiggling = false;
         animationTimer.stop();
-    }
-
-    /**
-     * Returns whether the animation is currently running.
-     */
-    public boolean isAnimating() {
-        return animating;
+        wiggleStopTimer.stop();
+        currentFrame = 0;
+        repaint();
     }
 
     @Override
@@ -110,28 +146,43 @@ public class AnimatedTailPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
-        // Center the icon in the panel
         int x = (getWidth() - ICON_SIZE) / 2;
         int y = (getHeight() - ICON_SIZE) / 2;
 
-        BufferedImage frame = showKey ? framesWithKey[currentFrame] : frames[currentFrame];
-        g2d.drawImage(frame, x, y, null);
+        BufferedImage frame;
+        if (wiggling) {
+            frame = showKey ? framesWithKey[currentFrame] : frames[currentFrame];
+        } else {
+            frame = showKey ? framesWithKey[0] : stillFrame;
+        }
 
+        g2d.drawImage(frame, x, y, null);
         g2d.dispose();
     }
 
     /**
-     * Gets the current rendered frame (useful for setting as window icon).
+     * Returns the current frame image (for window icon sync).
      */
     public BufferedImage getCurrentFrame() {
-        return showKey ? framesWithKey[currentFrame] : frames[currentFrame];
+        if (wiggling) {
+            return showKey ? framesWithKey[currentFrame] : frames[currentFrame];
+        }
+        return stillFrame;
     }
 
     /**
-     * Cleans up timers when the panel is removed.
+     * Whether the tail is currently wiggling.
+     */
+    public boolean isWiggling() {
+        return wiggling;
+    }
+
+    /**
+     * Clean up timers.
      */
     public void dispose() {
         animationTimer.stop();
+        wiggleStopTimer.stop();
         keyTimer.stop();
     }
 }

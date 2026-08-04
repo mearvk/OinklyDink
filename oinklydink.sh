@@ -7,7 +7,7 @@
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-JAR_FILE="$SCRIPT_DIR/oinklydink-launcher-1.0.0.jar"
+JAR_NAME="oinklydink-launcher-1.0.0.jar"
 
 # Check for Java
 if ! command -v java &> /dev/null; then
@@ -23,9 +23,16 @@ if [ "$JAVA_VER" -lt 11 ] 2>/dev/null; then
     echo "WARNING: Java 11+ recommended. Detected version: $JAVA_VER"
 fi
 
-# Check if JAR exists
-if [ ! -f "$JAR_FILE" ]; then
-    echo "ERROR: Cannot find $JAR_FILE"
+# Find the JAR - check current dir, then target/
+JAR_FILE=""
+if [ -f "$SCRIPT_DIR/$JAR_NAME" ]; then
+    JAR_FILE="$SCRIPT_DIR/$JAR_NAME"
+elif [ -f "$SCRIPT_DIR/target/$JAR_NAME" ]; then
+    JAR_FILE="$SCRIPT_DIR/target/$JAR_NAME"
+fi
+
+if [ -z "$JAR_FILE" ]; then
+    echo "ERROR: Cannot find $JAR_NAME"
     echo "Run 'mvn clean package' first to build OinklyDink."
     exit 1
 fi

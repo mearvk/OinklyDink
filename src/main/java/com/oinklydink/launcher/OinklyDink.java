@@ -107,8 +107,9 @@ public class OinklyDink extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(10, 0));
         panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 
-        // Animated pig tail icon (wiggles, double-click for red key)
+        // Animated 3D pig tail — sits still, wiggles on click, then launches
         animatedTailPanel = new AnimatedTailPanel();
+        animatedTailPanel.setOnLaunchAction(this::launchAll);
         panel.add(animatedTailPanel, BorderLayout.WEST);
 
         // Title and tagline
@@ -119,11 +120,11 @@ public class OinklyDink extends JFrame {
         titleLabel.setFont(getUIFont(Font.BOLD, 16));
         titleLabel.setForeground(new Color(0xC0, 0x5E, 0x7A));
 
-        JLabel taglineLabel = new JLabel("Launch Java. Only Java. Curly and reliable.");
+        JLabel taglineLabel = new JLabel("Click the tail to launch. Careful and comfortable.");
         taglineLabel.setFont(getUIFont(Font.ITALIC, 11));
         taglineLabel.setForeground(Color.GRAY);
 
-        JLabel platformLabel = new JLabel("Platform: " + CURRENT_OS.displayName + " | 44-frame animated tail");
+        JLabel platformLabel = new JLabel("Platform: " + CURRENT_OS.displayName + " | 3D tail, wiggles on click");
         platformLabel.setFont(getUIFont(Font.PLAIN, 10));
         platformLabel.setForeground(new Color(0x99, 0x99, 0x99));
 
