@@ -10,8 +10,7 @@ import java.awt.image.BufferedImage;
  *
  * This creates a small, borderless, always-on-bottom window that displays
  * the 3D pig's tail with a continuous gentle wiggle animation.
- * It acts as a desktop icon replacement — clicking it launches the full
- * OinklyDink launcher or directly launches the configured Java programs.
+ * It IS the Dink 5 launcher — clicking it launches the configured Java program.
  *
  * The widget:
  *  - Is undecorated (no title bar, no border)
@@ -19,9 +18,10 @@ import java.awt.image.BufferedImage;
  *  - Has a transparent background (just the tail floating)
  *  - Wiggles continuously with a gentle, comfortable sway
  *  - Shows "Dink 5" label below the icon
- *  - Single-click: burst wiggle + launch
- *  - Double-click: shows the red key
- *  - Right-click: context menu (open launcher, quit)
+ *  - Single-click: launches the configured Java program
+ *  - Double-click: shows the red key (cosmetic)
+ *  - Triple-click: opens the configuration UI
+ *  - Right-click: context menu (launch, configure, quit)
  *
  * Launch with: java -cp oinklydink-launcher-1.0.0.jar com.oinklydink.launcher.DesktopWidget
  */
@@ -127,13 +127,18 @@ public class DesktopWidget extends JWindow {
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     showContextMenu(e);
+                } else if (e.getClickCount() == 3) {
+                    // Triple-click: open configuration UI
+                    showKey = true;
+                    keyTimer.restart();
+                    SwingUtilities.invokeLater(() -> launchConfigUI());
                 } else if (e.getClickCount() == 2) {
-                    // Double-click: show red key
+                    // Double-click: show red key (cosmetic)
                     showKey = true;
                     keyTimer.restart();
                 } else if (e.getClickCount() == 1) {
-                    // Single-click: launch
-                    SwingUtilities.invokeLater(() -> launchOinklyDink());
+                    // Single-click: launch the configured Java program
+                    SwingUtilities.invokeLater(() -> launchConfiguredProgram());
                 }
             }
 
@@ -161,34 +166,96 @@ public class DesktopWidget extends JWindow {
     private void showContextMenu(MouseEvent e) {
         JPopupMenu menu = new JPopupMenu();
 
-        JMenuItem openItem = new JMenuItem("Open Launcher");
-        openItem.addActionListener(ev -> launchFullUI());
+        JMenuItem launchItem = new JMenuItem("Launch Program");
+        launchItem.addActionListener(ev -> launchConfiguredProgram());
+
+        JMenuItem configItem = new JMenuItem("Configure...");
+        configItem.addActionListener(ev -> launchConfigUI());
 
         JMenuItem quitItem = new JMenuItem("Quit Dink 5");
         quitItem.addActionListener(ev -> System.exit(0));
 
-        menu.add(openItem);
+        menu.add(launchItem);
+        menu.add(configItem);
         menu.addSeparator();
         menu.add(quitItem);
         menu.show(getContentPane(), e.getX(), e.getY());
     }
 
-    private void launchOinklyDink() {
+    /**
+     * Launches the configured Java program directly (reads from preferences).
+     */
+    private void launchConfiguredProgram() {
+        java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(OinklyDink.class);
+        String mainClass = prefs.get("main.class", "");
+        String classpath = prefs.get("main.classpath", "");
+        String args = prefs.get("main.args", "");
+        String javaPath = prefs.get("jvm.path", "");
+        String jvmOpts = prefs.get("jvm.options", "");
+
+        if (mainClass.isEmpty()) {
+            // No program configured — open the config UI instead
+            launchConfigUI();
+            return;
+        }
+
         try {
-            // Find our JAR and launch the full UI
+            String javaExe = javaPath.isEmpty() ? "java" : javaPath;
+
+            java.util.List<String> command = new java.util.ArrayList<>();
+
+            // On Windows, use cmd /c for proper PATH resolution
+            String osName = System.getProperty("os.name", "").toLowerCase();
+            if (osName.contains("win")) {
+                command.add("cmd");
+                command.add("/c");
+            }
+
+            command.add(javaExe);
+
+            if (!jvmOpts.isEmpty()) {
+                for (String opt : jvmOpts.split("\\s+")) {
+                    command.add(opt);
+                }
+            }
+
+            if (!classpath.isEmpty()) {
+                command.add("-cp");
+                command.add(classpath);
+            }
+
+            command.add(mainClass);
+
+            if (!args.isEmpty()) {
+                for (String arg : args.split("\\s+")) {
+                    command.add(arg);
+                }
+            }
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            pb.start();
+        } catch (Exception ex) {
+            System.err.println("Launch failed: " + ex.getMessage());
+            // Fall back to config UI
+            launchConfigUI();
+        }
+    }
+
+    /**
+     * Opens the full OinklyDink configuration UI.
+     */
+    private void launchConfigUI() {
+        try {
             String jarPath = getJarPath();
-            String javaBin = findGuiJava();
+            String javaBin = findJava();
 
             ProcessBuilder pb = new ProcessBuilder(javaBin, "-jar", jarPath);
             pb.redirectErrorStream(true);
             pb.start();
         } catch (Exception ex) {
-            System.err.println("Launch failed: " + ex.getMessage());
+            System.err.println("Config UI launch failed: " + ex.getMessage());
         }
-    }
-
-    private void launchFullUI() {
-        launchOinklyDink();
     }
 
     private String getJarPath() {
@@ -199,20 +266,35 @@ public class DesktopWidget extends JWindow {
                 return entry;
             }
         }
-        // Fallback: look relative to working directory
+        // Fallback: look in common install locations
+        String localAppData = System.getenv("LOCALAPPDATA");
         String[] candidates = {
                 "oinklydink-launcher-1.0.0.jar",
                 "target/oinklydink-launcher-1.0.0.jar",
+                (localAppData != null ? localAppData + "\\OinklyDink\\oinklydink-launcher-1.0.0.jar" : ""),
                 System.getProperty("user.home") + "/.local/opt/oinklydink/oinklydink-launcher-1.0.0.jar"
         };
         for (String c : candidates) {
-            if (new java.io.File(c).exists()) return c;
+            if (!c.isEmpty() && new java.io.File(c).exists()) return c;
         }
         return cp; // last resort
     }
 
-    private String findGuiJava() {
-        // Check common GUI-capable Java locations
+    private String findJava() {
+        // Check configured Java path first
+        java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(OinklyDink.class);
+        String configuredPath = prefs.get("jvm.path", "");
+        if (!configuredPath.isEmpty() && new java.io.File(configuredPath).exists()) {
+            return configuredPath;
+        }
+
+        // On Windows, just use "java" (relies on PATH)
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        if (osName.contains("win")) {
+            return "java";
+        }
+
+        // On Linux, check for GUI-capable Java
         String[] candidates = {
                 "/usr/lib/jvm/java-11-openjdk-amd64/bin/java",
                 "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
@@ -223,7 +305,6 @@ public class DesktopWidget extends JWindow {
         for (String c : candidates) {
             java.io.File f = new java.io.File(c);
             if (f.exists()) {
-                // Verify it has libawt_xawt.so
                 java.io.File awt = new java.io.File(f.getParentFile().getParent(), "lib/libawt_xawt.so");
                 if (awt.exists()) return c;
             }
@@ -242,6 +323,13 @@ public class DesktopWidget extends JWindow {
         SwingUtilities.invokeLater(() -> {
             DesktopWidget widget = new DesktopWidget();
             widget.setVisible(true);
+
+            // On first run (no program configured), auto-open the config UI
+            java.util.prefs.Preferences prefs = java.util.prefs.Preferences.userNodeForPackage(OinklyDink.class);
+            String mainClass = prefs.get("main.class", "");
+            if (mainClass.isEmpty()) {
+                widget.launchConfigUI();
+            }
         });
     }
 }

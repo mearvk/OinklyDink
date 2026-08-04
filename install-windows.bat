@@ -77,12 +77,19 @@ if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
 copy /Y "%JAR_PATH%" "%INSTALL_DIR%\%JAR_NAME%" >nul
 echo    Copied %JAR_NAME%
 
-REM Create launcher bat
+REM Create launcher bat (animated Dink 5 widget — the primary experience)
+(
+echo @echo off
+echo java -cp "%INSTALL_DIR%\%JAR_NAME%" com.oinklydink.launcher.DesktopWidget %%*
+) > "%INSTALL_DIR%\OinklyDink.bat"
+
+REM Also create a separate bat for the config UI
 (
 echo @echo off
 echo java -jar "%INSTALL_DIR%\%JAR_NAME%" %%*
-) > "%INSTALL_DIR%\OinklyDink.bat"
-echo    Created OinklyDink.bat
+) > "%INSTALL_DIR%\OinklyDink-Config.bat"
+echo    Created OinklyDink.bat (animated widget)
+echo    Created OinklyDink-Config.bat (configuration UI)
 echo.
 
 REM --- Step 4: Export pig tail icon ---
@@ -104,20 +111,33 @@ REM --- Step 5: Shortcuts ---
 echo [5/5] Creating shortcuts...
 
 REM Desktop shortcut via PowerShell (with pig tail icon)
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.IconLocation = '%ICO_PATH%,0'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
-
-if %ERRORLEVEL% equ 0 (
-    echo    Desktop shortcut created (with pig tail icon).
-) else (
-    echo    Note: Could not create desktop shortcut automatically.
-)
+REM Using a temp .ps1 to avoid CMD parenthesis parsing issues
+set "PS_SCRIPT=%TEMP%\oinklydink-shortcut.ps1"
+>"%PS_SCRIPT%" echo $ws = New-Object -ComObject WScript.Shell
+>>"%PS_SCRIPT%" echo $desktop = [Environment]::GetFolderPath('Desktop')
+>>"%PS_SCRIPT%" echo $sc = $ws.CreateShortcut("$desktop\Dink 5.lnk")
+>>"%PS_SCRIPT%" echo $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'
+>>"%PS_SCRIPT%" echo $sc.WorkingDirectory = '%INSTALL_DIR%'
+>>"%PS_SCRIPT%" echo $sc.IconLocation = '%ICO_PATH%,0'
+>>"%PS_SCRIPT%" echo $sc.Description = 'Pigs Tail Java Launcher'
+>>"%PS_SCRIPT%" echo $sc.Save()
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" 2>nul
+if errorlevel 1 (echo    Note: Could not create desktop shortcut automatically.) else (echo    Desktop shortcut created.)
 
 REM Start Menu shortcut (with pig tail icon)
 set "STARTMENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs\OinklyDink"
 if not exist "%STARTMENU%" mkdir "%STARTMENU%"
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.IconLocation = '%ICO_PATH%,0'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
-
+>"%PS_SCRIPT%" echo $ws = New-Object -ComObject WScript.Shell
+>>"%PS_SCRIPT%" echo $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk')
+>>"%PS_SCRIPT%" echo $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'
+>>"%PS_SCRIPT%" echo $sc.WorkingDirectory = '%INSTALL_DIR%'
+>>"%PS_SCRIPT%" echo $sc.IconLocation = '%ICO_PATH%,0'
+>>"%PS_SCRIPT%" echo $sc.Description = 'Pigs Tail Java Launcher'
+>>"%PS_SCRIPT%" echo $sc.Save()
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PS_SCRIPT%" 2>nul
 echo    Start Menu entry created.
+
+del "%PS_SCRIPT%" 2>nul
 echo.
 
 REM --- Done ---
