@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -63,17 +64,25 @@ public class OinklyDink extends JFrame {
     public OinklyDink() {
         super(APP_TITLE);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setIconImage(PigTailIcon.createPigTailImage(64));
+
+        // Set multi-resolution icon list for proper Windows taskbar display
+        List<Image> iconImages = new ArrayList<>();
+        for (Image img : PigTailIcon.createMultiResolutionIcons()) {
+            iconImages.add(img);
+        }
+        setIconImages(iconImages);
+
         initUI();
         loadPreferences();
         setMinimumSize(new Dimension(720, 640));
         setSize(760, 700);
         setLocationRelativeTo(null);
 
-        // Update window icon with animation
+        // Update window icon with animation (syncs taskbar icon to current frame)
         Timer iconTimer = new Timer(80, e -> {
             if (animatedTailPanel != null) {
-                setIconImage(animatedTailPanel.getCurrentFrame());
+                BufferedImage frame = animatedTailPanel.getCurrentFrame();
+                setIconImage(frame);
             }
         });
         iconTimer.start();

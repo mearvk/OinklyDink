@@ -85,22 +85,37 @@ echo java -jar "%INSTALL_DIR%\%JAR_NAME%" %%*
 echo    Created OinklyDink.bat
 echo.
 
-REM --- Step 4: Shortcuts ---
-echo [4/4] Creating shortcuts...
+REM --- Step 4: Export pig tail icon ---
+echo [4/5] Exporting pig tail icon...
 
-REM Desktop shortcut via PowerShell
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
+if not exist "%INSTALL_DIR%\icons" mkdir "%INSTALL_DIR%\icons"
+java -cp "%INSTALL_DIR%\%JAR_NAME%" com.oinklydink.launcher.IcoExporter "%INSTALL_DIR%\icons" >nul 2>&1
+
+if exist "%INSTALL_DIR%\icons\oinklydink.ico" (
+    echo    Pig tail icon exported.
+) else (
+    echo    WARNING: Icon export failed. Shortcuts will use default icon.
+)
+
+set "ICO_PATH=%INSTALL_DIR%\icons\oinklydink.ico"
+echo.
+
+REM --- Step 5: Shortcuts ---
+echo [5/5] Creating shortcuts...
+
+REM Desktop shortcut via PowerShell (with pig tail icon)
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.IconLocation = '%ICO_PATH%,0'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
 
 if %ERRORLEVEL% equ 0 (
-    echo    Desktop shortcut created.
+    echo    Desktop shortcut created (with pig tail icon).
 ) else (
     echo    Note: Could not create desktop shortcut automatically.
 )
 
-REM Start Menu shortcut
+REM Start Menu shortcut (with pig tail icon)
 set "STARTMENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs\OinklyDink"
 if not exist "%STARTMENU%" mkdir "%STARTMENU%"
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.IconLocation = '%ICO_PATH%,0'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
 
 echo    Start Menu entry created.
 echo.

@@ -3,16 +3,20 @@ package com.oinklydink.launcher;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 
 /**
  * System tray integration for OinklyDink.
  * Works on Windows, Linux (with compatible desktop), and macOS.
- * Provides a pig tail icon in the system tray with quick-launch options.
+ * Provides an animated pig tail icon in the system tray with quick-launch options.
  */
 public class SystemTrayIntegration {
 
     private final OinklyDink launcher;
     private TrayIcon trayIcon;
+    private BufferedImage[] trayFrames;
+    private int trayFrame = 0;
+    private Timer trayAnimTimer;
 
     public SystemTrayIntegration(OinklyDink launcher) {
         this.launcher = launcher;
@@ -32,7 +36,10 @@ public class SystemTrayIntegration {
         // Use appropriate icon size for the platform tray
         Dimension traySize = tray.getTrayIconSize();
         int iconSize = Math.max(traySize.width, 16);
-        Image trayImage = PigTailIcon.createPigTailImage(iconSize);
+
+        // Generate animated frames for tray icon
+        trayFrames = PigTailIcon.generateAllFrames(iconSize, false);
+        Image trayImage = trayFrames[0];
 
         PopupMenu popup = new PopupMenu();
 
@@ -58,13 +65,21 @@ public class SystemTrayIntegration {
         popup.add(exitItem);
 
         trayIcon = new TrayIcon(trayImage, "OinklyDink - Pig's Tail Java Launcher", popup);
-        trayIcon.setImageAutoSize(true);
+        trayIcon.setImageAutoSize(false); // We render at correct size already
 
         // Double-click to restore on all platforms
         trayIcon.addActionListener(e -> restoreWindow());
 
         try {
             tray.add(trayIcon);
+
+            // Animate the tray icon at ~12fps (subtle wiggle)
+            trayAnimTimer = new Timer(83, e -> {
+                trayFrame = (trayFrame + 1) % PigTailIcon.TOTAL_FRAMES;
+                trayIcon.setImage(trayFrames[trayFrame]);
+            });
+            trayAnimTimer.start();
+
             return true;
         } catch (AWTException e) {
             return false;
