@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=OinklyDink
+Comment=Pig's Tail Java Launcher - Launches Java programs and only Java programs
+Exec=java -jar /opt/oinklydink/oinklydink-launcher-1.0.0.jar
+Icon=oinklydink
+Terminal=false
+Categories=Development;IDE;Java;
+Keywords=java;launcher;pig;tail;oinklydink;
+StartupWMClass=com-oinklydink-launcher-OinklyDink
