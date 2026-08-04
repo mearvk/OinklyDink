@@ -89,13 +89,7 @@ REM --- Step 4: Shortcuts ---
 echo [4/4] Creating shortcuts...
 
 REM Desktop shortcut via PowerShell
-powershell -NoProfile -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); ^
-   $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; ^
-   $sc.WorkingDirectory = '%INSTALL_DIR%'; ^
-   $sc.Description = 'Pig''s Tail Java Launcher'; ^
-   $sc.Save()" 2>nul
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
 
 if %ERRORLEVEL% equ 0 (
     echo    Desktop shortcut created.
@@ -106,13 +100,7 @@ if %ERRORLEVEL% equ 0 (
 REM Start Menu shortcut
 set "STARTMENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs\OinklyDink"
 if not exist "%STARTMENU%" mkdir "%STARTMENU%"
-powershell -NoProfile -Command ^
-  "$ws = New-Object -ComObject WScript.Shell; ^
-   $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); ^
-   $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; ^
-   $sc.WorkingDirectory = '%INSTALL_DIR%'; ^
-   $sc.Description = 'Pig''s Tail Java Launcher'; ^
-   $sc.Save()" 2>nul
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; $sc.WorkingDirectory = '%INSTALL_DIR%'; $sc.Description = 'Pigs Tail Java Launcher'; $sc.Save()" 2>nul
 
 echo    Start Menu entry created.
 echo.
