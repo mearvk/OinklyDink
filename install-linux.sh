@@ -229,21 +229,54 @@ fi
 echo "    Application menu entry created."
 echo ""
 
+# --- Step 6b: Create animated desktop widget autostart ---
+echo -e "      ${GREEN}Setting up animated desktop widget...${NC}"
+
+# Create widget launcher script
+cat > "$INSTALL_DIR/dink5-widget" << EOF
+#!/bin/bash
+exec "$JAVA_BIN" -cp "$INSTALL_DIR/$JAR_NAME" com.oinklydink.launcher.DesktopWidget "\$@"
+EOF
+chmod +x "$INSTALL_DIR/dink5-widget"
+
+# Autostart on login
+AUTOSTART_DIR="$HOME/.config/autostart"
+mkdir -p "$AUTOSTART_DIR"
+cat > "$AUTOSTART_DIR/dink5-widget.desktop" << EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Dink 5 Widget
+Comment=Animated pig's tail desktop widget
+Exec=$JAVA_BIN -cp $INSTALL_DIR/$JAR_NAME com.oinklydink.launcher.DesktopWidget
+Icon=oinklydink
+Terminal=false
+Hidden=false
+X-GNOME-Autostart-enabled=true
+StartupNotify=false
+EOF
+
+echo "    Animated widget will start on login."
+echo ""
+
 # --- Done ---
 echo -e "${PINK}══════════════════════════════════════════════${NC}"
 echo -e "${GREEN}Installation complete!${NC}"
 echo ""
-echo "  Launch: oinklydink"
-echo "  Or:     Double-click the desktop icon (pig tail)"
-echo "  Or:     Find 'OinklyDink' in your application menu"
+echo "  The animated pig's tail now lives on your desktop."
+echo "  Click it to launch your Java programs."
+echo ""
+echo "  Also available:"
+echo "    Command: oinklydink (full launcher UI)"
+echo "    Menu:    Dink 5 in application menu"
 echo ""
 echo -e "${PINK}  🐷 Oink!${NC}"
 echo ""
 
-# --- Launch now ---
-echo -n "Launch OinklyDink now? [Y/n] "
+# --- Launch the widget now ---
+echo -n "Launch the animated Dink 5 widget now? [Y/n] "
 read -r answer
 if [ "$answer" != "n" ] && [ "$answer" != "N" ]; then
-    echo "Launching..."
-    nohup "$INSTALL_DIR/oinklydink" > /dev/null 2>&1 &
+    echo "Launching animated tail on desktop..."
+    nohup "$INSTALL_DIR/dink5-widget" > /dev/null 2>&1 &
 fi

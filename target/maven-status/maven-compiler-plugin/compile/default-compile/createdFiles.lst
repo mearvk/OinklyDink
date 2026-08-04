@@ -1,10 +1,14 @@
+com/oinklydink/launcher/DesktopWidget$1.class
 com/oinklydink/launcher/SystemTrayIntegration.class
-com/oinklydink/launcher/AnimatedTailPanel$1.class
 com/oinklydink/installer/OinklyDinkInstaller$OS.class
+com/oinklydink/launcher/DesktopWidget.class
 com/oinklydink/launcher/IconExporter.class
+com/oinklydink/launcher/DesktopWidget$3.class
+com/oinklydink/launcher/DesktopWidget$2.class
+com/oinklydink/installer/OinklyDinkInstaller.class
+com/oinklydink/launcher/OinklyDink$OS.class
+com/oinklydink/launcher/AnimatedTailPanel$1.class
 com/oinklydink/launcher/OinklyDink.class
 com/oinklydink/launcher/OinklyDink$1.class
-com/oinklydink/installer/OinklyDinkInstaller.class
 com/oinklydink/launcher/PigTailIcon.class
-com/oinklydink/launcher/OinklyDink$OS.class
 com/oinklydink/launcher/AnimatedTailPanel.class
