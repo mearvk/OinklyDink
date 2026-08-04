@@ -91,7 +91,7 @@ echo [4/4] Creating shortcuts...
 REM Desktop shortcut via PowerShell
 powershell -NoProfile -Command ^
   "$ws = New-Object -ComObject WScript.Shell; ^
-   $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'OinklyDink.lnk')); ^
+   $sc = $ws.CreateShortcut([System.IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), 'Dink 5.lnk')); ^
    $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; ^
    $sc.WorkingDirectory = '%INSTALL_DIR%'; ^
    $sc.Description = 'Pig''s Tail Java Launcher'; ^
@@ -108,7 +108,7 @@ set "STARTMENU=%APPDATA%\Microsoft\Windows\Start Menu\Programs\OinklyDink"
 if not exist "%STARTMENU%" mkdir "%STARTMENU%"
 powershell -NoProfile -Command ^
   "$ws = New-Object -ComObject WScript.Shell; ^
-   $sc = $ws.CreateShortcut('%STARTMENU%\OinklyDink.lnk'); ^
+   $sc = $ws.CreateShortcut('%STARTMENU%\Dink 5.lnk'); ^
    $sc.TargetPath = '%INSTALL_DIR%\OinklyDink.bat'; ^
    $sc.WorkingDirectory = '%INSTALL_DIR%'; ^
    $sc.Description = 'Pig''s Tail Java Launcher'; ^
@@ -133,7 +133,7 @@ echo @echo off
 echo echo Uninstalling OinklyDink...
 echo rd /s /q "%INSTALL_DIR%"
 echo rd /s /q "%STARTMENU%"
-echo del /q "%USERPROFILE%\Desktop\OinklyDink.lnk" 2^>nul
+echo del /q "%USERPROFILE%\Desktop\Dink 5.lnk" 2^>nul
 echo echo Done.
 echo pause
 ) > "%INSTALL_DIR%\uninstall.bat"

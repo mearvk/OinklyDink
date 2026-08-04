@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=OinklyDink
+Name=Dink 5
 Comment=Pig's Tail Java Launcher - Launches Java programs and only Java programs
 Exec=java -jar /opt/oinklydink/oinklydink-launcher-1.0.0.jar
 Icon=oinklydink

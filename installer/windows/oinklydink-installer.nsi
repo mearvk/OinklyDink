@@ -53,13 +53,13 @@ Section "Install"
 
     ; Create Start Menu shortcuts
     CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-    CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" \
+    CreateShortcut "$SMPROGRAMS\${APP_NAME}\Dink 5.lnk" \
         "$INSTDIR\OinklyDink.bat" "" "" "" SW_SHOWMINIMIZED "" "${APP_DESCRIPTION}"
     CreateShortcut "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk" \
         "$INSTDIR\uninstall.exe"
 
     ; Desktop shortcut
-    CreateShortcut "$DESKTOP\${APP_NAME}.lnk" \
+    CreateShortcut "$DESKTOP\Dink 5.lnk" \
         "$INSTDIR\OinklyDink.bat" "" "" "" SW_SHOWMINIMIZED "" "${APP_DESCRIPTION}"
 
     ; Write uninstaller
@@ -92,10 +92,10 @@ Section "Uninstall"
     RMDir "$INSTDIR"
 
     ; Remove shortcuts
-    Delete "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk"
+    Delete "$SMPROGRAMS\${APP_NAME}\Dink 5.lnk"
     Delete "$SMPROGRAMS\${APP_NAME}\Uninstall.lnk"
     RMDir "$SMPROGRAMS\${APP_NAME}"
-    Delete "$DESKTOP\${APP_NAME}.lnk"
+    Delete "$DESKTOP\Dink 5.lnk"
 
     ; Remove registry
     DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"

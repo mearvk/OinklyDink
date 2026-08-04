@@ -197,13 +197,13 @@ mkdir -p "$DESKTOP_DIR"
 DESKTOP_CONTENT="[Desktop Entry]
 Version=1.0
 Type=Application
-Name=OinklyDink
+Name=Dink 5
 Comment=Pig's Tail Java Launcher - Launches Java and only Java
 Exec=$JAVA_BIN -jar $INSTALL_DIR/$JAR_NAME
 Icon=oinklydink
 Terminal=false
 Categories=Development;Java;
-Keywords=java;launcher;pig;tail;oinklydink;
+Keywords=java;launcher;pig;tail;oinklydink;dink;
 StartupWMClass=com-oinklydink-launcher-OinklyDink
 StartupNotify=true"
 

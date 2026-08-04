@@ -119,9 +119,9 @@ cat > "$APP_DIR/Contents/Info.plist" << EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>OinklyDink</string>
+    <string>Dink 5</string>
     <key>CFBundleDisplayName</key>
-    <string>OinklyDink</string>
+    <string>Dink 5</string>
     <key>CFBundleIdentifier</key>
     <string>com.oinklydink.launcher</string>
     <key>CFBundleVersion</key>
